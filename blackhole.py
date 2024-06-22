@@ -13,12 +13,16 @@ scale = 0.01
 distanceFromBlackHole = accretionDiskOuterRadius*10
 sx = -distanceFromBlackHole
 sy = 1
-sz = accretionDiskOuterRadius/5
-resolution = 100
+sz = accretionDiskOuterRadius/2
+resolution = 200
+
+maxbrightness = [255/255, 153/255, 0]
+minbrightness = [0,0,0]
+screen = [[[0 for x in range(1)] for x in range(resolution)] for x in range(resolution)]
+screencolour = [[[0 for x in range(3)] for x in range(resolution)] for x in range(resolution)]
 
 fieldOfView = 180/math.pi*2*math.atan(accretionDiskOuterRadius/distanceFromBlackHole)
 print("Field of view:",fieldOfView)
-screen = [[[0 for x in range(1)] for x in range(resolution)] for x in range(resolution)]
 def deg(angle):
     return 180/math.pi*angle
 def rad(angle):
@@ -29,6 +33,8 @@ def degrectify(angle):
     while(angle > 360):
         angle -= 360
     return angle
+def clamp(num,minn,maxx):
+    return min(max(minn,num),maxx)
 def checkcollision(x,y,z,dx,dy,dz):
     xprime = x+dx
     yprime = y+dy
@@ -85,6 +91,8 @@ for pixely in range(resolution):
         x = sx
         y = sy
         z = sz
+        dist = (x**2+y**2+z**2)**0.5
+        horidist = (x*x+y*y)**0.5
         horiv = speedoflight*math.cos(rad(pointdec))
         vx = horiv*math.cos(rad(pointra))
         vy = horiv*math.sin(rad(pointra))
@@ -93,6 +101,7 @@ for pixely in range(resolution):
         while(raycast == False and localtime < accretionDiskOuterRadius*2/speedoflight*10):
             
             dist = (x**2+y**2+z**2)**0.5
+            horidist = (x*x+y*y)**0.5
             acceleration = gravitationalConstant*massOfBlackHoleInSolarMass*(1.989*(10**30))/(dist**2)
             #unit direction
             originra,origindec = getBackOriginPolar(x,y,z)
@@ -130,9 +139,19 @@ for pixely in range(resolution):
         if(emitlight == True):
             bruh = 0
             screen[pixely][pixelx] = 1
+            screencolour[pixely][pixelx][0] = clamp((maxbrightness[0]-minbrightness[0])*((accretionDiskOuterRadius-horidist)/(accretionDiskOuterRadius-schwarzschildRadius)),0,1)
+            screencolour[pixely][pixelx][1] = clamp((maxbrightness[1]-minbrightness[1])*((accretionDiskOuterRadius-horidist)/(accretionDiskOuterRadius-schwarzschildRadius)),0,1)
+            screencolour[pixely][pixelx][2] = clamp((maxbrightness[2]-minbrightness[2])*((accretionDiskOuterRadius-horidist)/(accretionDiskOuterRadius-schwarzschildRadius)),0,1)
+        elif(emitlight == False and raycast == True):
+            bruh = 0
+            screen[pixely][pixelx] = 1
+            screencolour[pixely][pixelx][0] = 0
+            screencolour[pixely][pixelx][1] = 0
+            screencolour[pixely][pixelx][2] = 0
+
         anglera+=angleincrement
-        print(iteration/resolution/resolution*100,'%', "finished")
-    if(bruh > 100 and pixely/resolution*100 > 30):
+    print(iteration/resolution/resolution*100,'%', "finished")
+    if(bruh > resolution and pixely/resolution*100 > 30):
         break
     # if(pixely%10 == 0):
     angledec+=angleincrement
@@ -143,4 +162,4 @@ with open("blackholeoutput.txt", 'w') as file:
     for i in range(resolution):
         for y in range(resolution):
             if(screen[i][y] == 1):
-                file.write(str(y)+" "+str(i)+"\n")
+                file.write(str(y)+" "+str(i)+" "+str(screencolour[i][y][0])+" "+str(screencolour[i][y][1])+" "+str(screencolour[i][y][2])+"\n")
