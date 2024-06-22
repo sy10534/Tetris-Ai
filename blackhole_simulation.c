@@ -3833,7 +3833,7 @@ if (!__Pyx_RefNanny) {
  * cdef double speedoflight = 3 * (10 ** 8)
  * cdef double schwarzschildRadius = 2 * gravitationalConstant * massOfBlackHoleInSolarMass * (1.989 * 10**30) / speedoflight / speedoflight             # <<<<<<<<<<<<<<
  * 
- * cdef double deltatime = 1
+ * cdef double deltatime = 0.2
  */
   __pyx_t_3 = PyFloat_FromDouble(((2.0 * __pyx_v_20blackhole_simulation_gravitationalConstant) * __pyx_v_20blackhole_simulation_massOfBlackHoleInSolarMass)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 12, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
@@ -3862,15 +3862,15 @@ if (!__Pyx_RefNanny) {
   /* "blackhole_simulation.pyx":14
  * cdef double schwarzschildRadius = 2 * gravitationalConstant * massOfBlackHoleInSolarMass * (1.989 * 10**30) / speedoflight / speedoflight
  * 
- * cdef double deltatime = 1             # <<<<<<<<<<<<<<
+ * cdef double deltatime = 0.2             # <<<<<<<<<<<<<<
  * cdef double scale = 0.01
  * 
  */
-  __pyx_v_20blackhole_simulation_deltatime = 1.0;
+  __pyx_v_20blackhole_simulation_deltatime = 0.2;
 
   /* "blackhole_simulation.pyx":15
  * 
- * cdef double deltatime = 1
+ * cdef double deltatime = 0.2
  * cdef double scale = 0.01             # <<<<<<<<<<<<<<
  * 
  * cdef double sx = -accretionDiskOuterRadius*8

@@ -11,7 +11,7 @@ cdef double massOfBlackHoleInSolarMass = 700000/2
 cdef double speedoflight = 3 * (10 ** 8)
 cdef double schwarzschildRadius = 2 * gravitationalConstant * massOfBlackHoleInSolarMass * (1.989 * 10**30) / speedoflight / speedoflight
 
-cdef double deltatime = 1
+cdef double deltatime = 0.2
 cdef double scale = 0.01
 
 cdef double sx = -accretionDiskOuterRadius*8
