@@ -3,18 +3,18 @@ from decimal import Decimal
 accretionDiskOuterRadius = 5.184*(10**9)
 accretionDiskInnerRadius = 0
 gravitationalConstant = 6.67430*(10**(-11))
-massOfBlackHoleInSolarMass = 70000
+massOfBlackHoleInSolarMass = 700000
 speedoflight = 3*(10**8)
-schwarzschildRadius = 2*gravitationalConstant*massOfBlackHoleInSolarMass*(1.989*10**30)/speedoflight/speedoflight
+schwarzschildRadius = 2*gravitationalConstant*massOfBlackHoleInSolarMass*(1.989*10**30)/speedoflight/speedoflight/3
 
 deltatime = 1
 scale = 0.01
 
-distanceFromBlackHole = accretionDiskOuterRadius*1.5
+distanceFromBlackHole = accretionDiskOuterRadius*10
 sx = -distanceFromBlackHole
 sy = 1
-sz = 1
-resolution = 50
+sz = accretionDiskOuterRadius/5
+resolution = 100
 
 fieldOfView = 180/math.pi*2*math.atan(accretionDiskOuterRadius/distanceFromBlackHole)
 print("Field of view:",fieldOfView)
@@ -41,7 +41,8 @@ def checkcollision(x,y,z,dx,dy,dz):
 
     if((z > 0 and zprime < 0) or (z < 0 and zprime > 0) or (z==0)):
         horizontaldist = (xprime**2+yprime**2)**0.5
-        if(horizontaldist <= accretionDiskInnerRadius):
+        if(horizontaldist <= accretionDiskOuterRadius):
+            # print("RING RING RING")
             crash = True
             visible = True
     if(dist <= schwarzschildRadius):
@@ -70,12 +71,14 @@ angleincrement = fieldOfView/resolution
 anglera = 0
 angledec = 0
 iteration = 0
+bruh = 0
 for pixely in range(resolution):
+    anglera = 0
     for pixelx in range(resolution):
         launchra = anglera-fieldOfView/2
         launchdec = angledec-fieldOfView/2
         pointra = degrectify(launchra)
-        pointdec = degrectify(launchdec)
+        pointdec = launchdec
         localtime = 0
         raycast = False
         emitlight = False
@@ -86,7 +89,8 @@ for pixely in range(resolution):
         vx = horiv*math.cos(rad(pointra))
         vy = horiv*math.sin(rad(pointra))
         vz = speedoflight*math.sin(rad(pointdec))
-        while(raycast == False and localtime < 2000):
+        # print(sn(vx),sn(vy),sn(vz), pointra, pointdec)
+        while(raycast == False and localtime < accretionDiskOuterRadius*2/speedoflight*10):
             
             dist = (x**2+y**2+z**2)**0.5
             acceleration = gravitationalConstant*massOfBlackHoleInSolarMass*(1.989*(10**30))/(dist**2)
@@ -106,27 +110,31 @@ for pixely in range(resolution):
             horiv = speedoflight*math.cos(rad(pointdec))
             vx = horiv*math.cos(rad(pointra))
             vy = horiv*math.sin(rad(pointra))
-            vz = speedoflight*math.sin(rad(origindec))
+            vz = speedoflight*math.sin(rad(pointdec))
             getcrash,getvisible = checkcollision(x,y,z,vx*deltatime,vy*deltatime,vz*deltatime)
             raycast = getcrash
             emitlight = getvisible
             x += vx*deltatime
             y += vy*deltatime
             z += vz*deltatime
-            if(pixely%10 == 0 and pixelx == 0):
-                print(pointra,pointdec)
-                print("")
+            # if(pixely%10 == 0 and pixelx == 0 and localtime%50 == 0):
+            #     print(pointra,pointdec)
+            #     print("")
                 # print(sn(dist), sn(schwarzschildRadius),sn(x),sn(y),sn(z),sn(vx),sn(vy),sn(vz),sn(ax),sn(ay),sn(az))
                 # print("")
                 # print("")
 
             localtime += deltatime
         iteration += 1
-        if(emitlight == True or raycast == True):
+        bruh += 1
+        if(emitlight == True):
+            bruh = 0
             screen[pixely][pixelx] = 1
         anglera+=angleincrement
-    if(pixely%10 == 0):
         print(iteration/resolution/resolution*100,'%', "finished")
+    if(bruh > 100 and pixely/resolution*100 > 30):
+        break
+    # if(pixely%10 == 0):
     angledec+=angleincrement
     
 
