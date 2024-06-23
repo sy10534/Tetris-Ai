@@ -17,7 +17,7 @@ colors = np.column_stack((red/255, green/255, blue/255))
 # Create the plot
 plt.figure(figsize=(8, 6), facecolor="black")
 fig, ax = plt.subplots()
-plt.scatter(x, y, c=colors, s = 0.45)
+plt.scatter(x, y, c=colors, s = 0.2)
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Plot of data.txt')
