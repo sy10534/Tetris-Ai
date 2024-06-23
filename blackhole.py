@@ -142,6 +142,7 @@ for pixely in range(resolution):
             screencolour[pixely][pixelx][0] = clamp((maxbrightness[0]-minbrightness[0])*((accretionDiskOuterRadius-horidist)/(accretionDiskOuterRadius-schwarzschildRadius)),0,1)
             screencolour[pixely][pixelx][1] = clamp((maxbrightness[1]-minbrightness[1])*((accretionDiskOuterRadius-horidist)/(accretionDiskOuterRadius-schwarzschildRadius)),0,1)
             screencolour[pixely][pixelx][2] = clamp((maxbrightness[2]-minbrightness[2])*((accretionDiskOuterRadius-horidist)/(accretionDiskOuterRadius-schwarzschildRadius)),0,1)
+            
         elif(emitlight == False and raycast == True):
             bruh = 0
             screen[pixely][pixelx] = 1

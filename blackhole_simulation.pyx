@@ -2,23 +2,26 @@
 
 import math
 from decimal import Decimal
-from libc.math cimport atan, pi, cos, sin
-
+import numpy as np
+from libc.math cimport atan, pi, cos, sin, log
+from PIL import Image
+cimport numpy as np
+import numpy as np
 cdef double accretionDiskOuterRadius = 5.184 * (10 ** 9)
-cdef double accretionDiskInnerRadius = 0
 cdef double gravitationalConstant = 6.67430 * (10 ** (-11))
 cdef double massOfBlackHoleInSolarMass = 700000/2
 cdef double speedoflight = 3 * (10 ** 8)
-cdef double schwarzschildRadius = 2 * gravitationalConstant * massOfBlackHoleInSolarMass * (1.989 * 10**30) / speedoflight / speedoflight
+cdef double schwarzschildRadius = 2 * gravitationalConstant * massOfBlackHoleInSolarMass * (1.989 * 10**30) / speedoflight / speedoflight / 2
+cdef double accretionDiskInnerRadius = 5.184 * (10 ** 9)/5
 
-cdef double deltatime = 0.2
+cdef double deltatime = 0.1
 cdef double scale = 0.01
 
-cdef double sx = -accretionDiskOuterRadius*8
+cdef double sx = -accretionDiskOuterRadius*6
 cdef double sy = 1
 cdef double sz = accretionDiskOuterRadius
 cdef double distanceFromBlackHole = (sx*sx+sz*sz)**0.5
-cdef int resolution = 800
+cdef int resolution = 1600
 
 cdef list maxbrightness = [255 / 255, 100 / 255, 0]
 cdef list minbrightness = [0, 0, 0]
@@ -54,7 +57,7 @@ cdef tuple checkcollision(double x, double y, double z, double dx, double dy, do
     cdef double dist = (xprime ** 2 + yprime ** 2 + zprime ** 2) ** 0.5
 
     if ((z > 0 and zprime < 0) or (z < 0 and zprime > 0) or (z == 0)):
-        if horizontaldist <= accretionDiskOuterRadius:
+        if horizontaldist <= accretionDiskOuterRadius and horizontaldist >= accretionDiskInnerRadius:
             crash = True
             visible = True
     if dist <= schwarzschildRadius:
@@ -81,6 +84,56 @@ cdef tuple getBackOriginPolar(double x, double y, double z):
     return getOriginPolar(-x, -y, -z)
 
 
+cdef list get_image_data():
+    # Open the image using Pillow
+    image = Image.open(r"C:\Users\user\Desktop\local code\Tetris-Ai\accretion_disk.png")
+    
+    # Convert the image to RGB if it is not already in that mode
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    
+    # Get the size of the image
+    width, height = image.size
+    
+    # Load the image data
+    cdef np.ndarray[np.uint8_t, ndim=3] data = np.asarray(image)
+    
+    # Create an empty list to hold the pixel data
+    cdef list pixel_data = []
+    
+    # Iterate through each pixel and store the color data
+    cdef int x, y
+    for y in range(height):
+        for x in range(width):
+            r = data[y, x, 0]
+            g = data[y, x, 1]
+            b = data[y, x, 2]
+            # Store the data as a flat list of tuples
+            pixel_data.append((r, g, b))
+    
+    return pixel_data
+cdef tuple get_pixel_color_at_polar(double degree, double length):
+    cdef double x, y
+    cdef int px, py
+
+    x = length / accretionDiskOuterRadius * image_width / 2 * cos(degree * pi / 180.0)
+    y = length / accretionDiskOuterRadius * image_width / 2 * sin(degree * pi / 180.0)
+
+    x += image_width / 2
+    y += image_height / 2
+
+    px = <int>x
+    py = <int>y
+
+    px = max(0, min(px, image_width - 1))
+    py = max(0, min(py, image_height - 1))
+
+    # Access the pixel color using nested indexing
+    r, g, b = pixel_colors[py * image_width + px]
+    return r, g, b
+cdef int image_width = 1216
+cdef int image_height = 1216
+cdef list pixel_colors = get_image_data()
 cdef double angleincrement = fieldOfView / resolution
 cdef double anglera = 0
 cdef double angledec = deg(atan(sz/sx))
@@ -111,6 +164,7 @@ cdef tuple pointra_pointdec = getOriginPolar(1, 1, 1)
 cdef tuple getcrash_getvisible = checkcollision(1, 1, 1, 1 * 1, 1 * 1, 1 * 1)
 cdef bint getcrash = False
 cdef bint getvisible = False
+cdef tuple nice = get_pixel_color_at_polar((getOriginPolar(1, 1, 1))[0],1)
 for pixely in range(resolution):
     anglera = 0
     for pixelx in range(resolution):
@@ -172,9 +226,14 @@ for pixely in range(resolution):
         if emitlight:
             bruh = 0
             screen[pixely][pixelx] = 1
-            screencolour[pixely][pixelx][0] = clamp((maxbrightness[0] - minbrightness[0]) * ((accretionDiskOuterRadius - horidist) / (accretionDiskOuterRadius - schwarzschildRadius)), 0, 1)
-            screencolour[pixely][pixelx][1] = clamp((maxbrightness[1] - minbrightness[1]) * ((accretionDiskOuterRadius - horidist) / (accretionDiskOuterRadius - schwarzschildRadius)), 0, 1)
-            screencolour[pixely][pixelx][2] = clamp((maxbrightness[2] - minbrightness[2]) * ((accretionDiskOuterRadius - horidist) / (accretionDiskOuterRadius - schwarzschildRadius)), 0, 1)
+            nice = get_pixel_color_at_polar((getOriginPolar(x, y, z))[0],dist)
+            #1 + log (1 - x)
+            screencolour[pixely][pixelx][0] = clamp((nice[0]-minbrightness[0])*(1.4+0.4*log(1-(dist)/(accretionDiskOuterRadius))),0,255)
+            screencolour[pixely][pixelx][1] = clamp((nice[1]-minbrightness[1])*(1.4+0.4*log(1-(dist)/(accretionDiskOuterRadius))),0,255)
+            screencolour[pixely][pixelx][2] = clamp((nice[2]-minbrightness[2])*(1.4+0.4*log(1-(dist)/(accretionDiskOuterRadius))),0,255)
+            #screencolour[pixely][pixelx][0] = clamp((maxbrightness[0] - minbrightness[0]) * ((accretionDiskOuterRadius - horidist) / (accretionDiskOuterRadius - schwarzschildRadius)), 0, 1)
+            #screencolour[pixely][pixelx][1] = clamp((maxbrightness[1] - minbrightness[1]) * ((accretionDiskOuterRadius - horidist) / (accretionDiskOuterRadius - schwarzschildRadius)), 0, 1)
+            #screencolour[pixely][pixelx][2] = clamp((maxbrightness[2] - minbrightness[2]) * ((accretionDiskOuterRadius - horidist) / (accretionDiskOuterRadius - schwarzschildRadius)), 0, 1)
         elif not emitlight and raycast:
             bruh = 0
             screen[pixely][pixelx] = 1
@@ -189,6 +248,7 @@ for pixely in range(resolution):
 
         anglera += angleincrement
     angledec += angleincrement
+    print(pixely/resolution*100, "% finished")
 
 # Output the screen matrix and color data for verification
 #for pixely in range(resolution):
